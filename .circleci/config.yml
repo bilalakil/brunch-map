@@ -1,2 +1,22 @@
 version: 2
 
+jobs:
+  build:
+    working_directory: ~/brunch-map
+    docker:
+      - image: node:6
+    steps:
+      - checkout
+      - restore_cache:
+          key: global-{{ .Branch }}-firebase-tools@3.7.0
+      - run: npm install -g firebase-tools@3.7.0
+      - save_cache:
+          key: global-{{ .Branch }}-firebase-tools@3.7.0
+          paths:
+            - /usr/local/lib/node_modules
+      - deploy:
+          name: Deploy pre-supported branch
+          command: |
+            TOKEN=`eval echo '$FIREBASE_TOKEN_'$CIRCLE_BRANCH`
+            firebase use $CIRCLE_BRANCH --token $TOKEN
+            firebase deploy --token $TOKEN
