@@ -8,15 +8,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: global-{{ .Branch }}-firebase-tools@3.7.0
-      - run: npm install -g firebase-tools@3.7.0
+          key: yarn-{{ checksum "yarn.lock" }}
+      - run:
+          name: Yarn
+          command: yarn --pure-lockfile --cache-folder .yarn-cache
       - save_cache:
-          key: global-{{ .Branch }}-firebase-tools@3.7.0
+          key: yarn-{{ checksum "yarn.lock" }}
           paths:
-            - /usr/local/lib/node_modules
+            - node_modules
+            - .yarn-cache
+      - run:
+          name: Build
+          command: node_modules/.bin/gulp build --branch $CIRCLE_BRANCH
       - deploy:
           name: Deploy pre-supported branch
           command: |
             TOKEN=`eval echo '$FIREBASE_TOKEN_'$CIRCLE_BRANCH`
-            firebase use $CIRCLE_BRANCH --token $TOKEN
-            firebase deploy --token $TOKEN
+            node_modules/.bin/firebase use $CIRCLE_BRANCH --token $TOKEN
+            node_modules/.bin/firebase deploy --token $TOKEN
