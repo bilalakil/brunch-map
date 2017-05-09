@@ -15,6 +15,24 @@
             "address": {
               ".validate": "newData.isString() && newData.val().length != 0 && newData.val().length < 300"
             },
+
+            "position": {
+              ".write": "auth !== null && auth.token.isAdmin === true",
+              ".validate": "(newData.hasChildren(['lat', 'lng']) && !newData.hasChildren(['error'])) || (!newData.hasChildren(['lat', 'lng']) && newData.hasChildren(['error']))",
+
+              "lat": {
+                ".validate": "newData.isNumber()"
+              },
+              "lng": {
+                ".validate": "newData.isNumber()"
+              },
+              "error": {
+                ".validate": "newData.val() === true"
+              },
+
+              "$other": { ".validate": false }
+            },
+
             "$other": { ".validate": false }
           }
         },

@@ -34,6 +34,8 @@
 </style>
 
 <script>
+import Vue from 'vue'
+
 const auth = firebase.auth(),
       googleAuth = new firebase.auth.GoogleAuthProvider(),
       db = firebase.database()

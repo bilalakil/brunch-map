@@ -7,22 +7,50 @@ jobs:
       - image: node:6
     steps:
       - checkout
+
       - restore_cache:
-          key: yarn-{{ checksum "yarn.lock" }}
+          key: app-yarn-{{ checksum "app/yarn.lock" }}
       - run:
-          name: Yarn
+          name: Yarn (App)
+          working_directory: app
           command: yarn --pure-lockfile --cache-folder .yarn-cache
       - save_cache:
-          key: yarn-{{ checksum "yarn.lock" }}
+          key: app-yarn-{{ checksum "app/yarn.lock" }}
+          paths:
+            - app/node_modules
+            - app/.yarn-cache
+
+      - run:
+          name: Build App
+          working_directory: app
+          command: ./node_modules/.bin/webpack --env.branch $CIRCLE_BRANCH
+
+      - restore_cache:
+          key: functions-yarn-{{ checksum "functions/yarn.lock" }}
+      - run:
+          name: Yarn (Functions)
+          working_directory: functions
+          command: yarn --pure-lockfile --cache-folder .yarn-cache
+      - save_cache:
+          key: functions-yarn-{{ checksum "functions/yarn.lock" }}
+          paths:
+            - functions/node_modules
+            - functions/.yarn-cache
+
+      - restore_cache:
+          key: deploy-yarn-{{ checksum "yarn.lock" }}
+      - run:
+          name: Yarn (Deploy)
+          command: yarn --pure-lockfile --cache-folder .yarn-cache
+      - save_cache:
+          key: deploy-yarn-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
             - .yarn-cache
-      - run:
-          name: Build
-          command: node_modules/.bin/gulp build --branch $CIRCLE_BRANCH
+
       - deploy:
-          name: Deploy pre-supported branch
+          name: Deploy to Firebase
           command: |
             TOKEN=`eval echo '$FIREBASE_TOKEN_'$CIRCLE_BRANCH`
-            node_modules/.bin/firebase use $CIRCLE_BRANCH --token $TOKEN
-            node_modules/.bin/firebase deploy --token $TOKEN
+            ./node_modules/.bin/firebase use $CIRCLE_BRANCH --token $TOKEN
+            ./node_modules/.bin/firebase deploy --token $TOKEN
