@@ -3,7 +3,13 @@ const webpack                    = require('webpack'),
       ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
 
 module.exports = env => {
-  isProd = !env || !env.branch || env.branch === 'master'
+  const isProd = !env || !env.branch || env.branch === 'master',
+        vars = {}
+  
+  vars.GOOGLE_MAPS_API_KEY = '"' + process.env.GOOGLE_MAPS_API_KEY + '"'
+  if(isProd) {
+    vars.NODE_ENV = '"production"'
+  }
 
   return {
     entry: './src/js/app',
@@ -23,13 +29,9 @@ module.exports = env => {
       new ScriptExtHtmlWebpackPlugin({
         defaultAttribute: 'defer'
       }),
-      isProd
-        ? new webpack.DefinePlugin({
-            'process.env': {
-              NODE_ENV: '"production"'
-            }
-          })
-        : null,
+      new webpack.DefinePlugin({
+        'process.env': vars
+      }),
       isProd
         ? new webpack.optimize.UglifyJsPlugin()
         : null,

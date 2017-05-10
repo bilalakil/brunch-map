@@ -1,6 +1,18 @@
 <template>
   <div>
     <div v-if="user">
+      <gmap-map
+        :center="{lat: 0, lng: 0}"
+        :zoom="1"
+        style="width: 500px; height: 500px"
+      >
+        <gmap-marker
+          v-for="(spot, id) in brunchSpots"
+          v-if="spot.position && !spot.position.error"
+          :position="spot.position"
+        ></gmap-marker>
+      </gmap-map>
+
       <ul>
         <li v-for="(spot, id) in brunchSpots">
           {{ spot.name }} ({{ spot.address }})

@@ -23,7 +23,9 @@ jobs:
       - run:
           name: Build App
           working_directory: app
-          command: ./node_modules/.bin/webpack --env.branch $CIRCLE_BRANCH
+          command: |
+            export GOOGLE_MAPS_API_KEY=`eval echo '$GOOGLE_MAPS_API_KEY_'$CIRCLE_BRANCH`
+            ./node_modules/.bin/webpack --env.branch $CIRCLE_BRANCH
 
       - restore_cache:
           key: functions-yarn-{{ checksum "functions/yarn.lock" }}
