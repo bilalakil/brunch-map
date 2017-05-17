@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+@import 'variables';
+@import '../../node_modules/material-design-lite/src/material-design-lite';
+
+// https://github.com/GoogleChrome/dialog-polyfill
+dialog {
+  position: fixed;
+  top: 50%;
+  transform: translate(0, -50%);
+
+  // Also need this for some reason...
+  z-index: 100;
+}

@@ -44,12 +44,27 @@ module.exports = env => {
           options: {
             scss: 'vue-style-loader!css-loader!sass-loader',
             sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax',
+            cssSourceMap: !isProd,
           }
         },
         {
           test: /\.js$/,
           loader: 'babel-loader',
           exclude: /node_modules/,
+        },
+        {
+          test: /\.scss$/,
+          use: [
+            { loader: 'style-loader' },
+            {
+              loader: 'css-loader',
+              options: {
+                minimize: isProd,
+                sourceMaps: !isProd,
+              },
+            },
+            { loader: 'sass-loader' },
+          ]
         },
         {
           test: /\.(png|jpg|gif|svg)$/,
