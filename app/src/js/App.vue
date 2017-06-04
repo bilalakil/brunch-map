@@ -109,7 +109,7 @@
         <button
           type="button"
           class="mdl-button"
-          @click="dialog = null"
+          @click="dialog = null; resetEditForm()"
         >Close</button>
       </div>
     </dialog>
@@ -177,6 +177,11 @@ export default {
 
       this.dialog = 'edit'
     },
+    resetEditForm() {
+      this.brunchSpotForm.id = ''
+      this.brunchSpotForm.name = ''
+      this.brunchSpotForm.address = ''
+    },
 
     saveBrunchSpot(e) {
       const ref = this.brunchSpotForm.id
@@ -188,17 +193,13 @@ export default {
         address: this.brunchSpotForm.address,
       })
 
-      this.brunchSpotForm.id = ''
-      this.brunchSpotForm.name = ''
-      this.brunchSpotForm.address = ''
+      this.resetEditForm()
     },
     deleteBrunchSpot(id) {
       db.ref('users/' + this.user.uid + '/brunchSpots/' + id).remove()
 
       if(id === this.brunchSpotForm.id) {
-        this.brunchSpotForm.id = ''
-        this.brunchSpotForm.name = ''
-        this.brunchSpotForm.address = ''
+        this.resetEditForm()
       }
     },
 
