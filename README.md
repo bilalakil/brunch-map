@@ -14,6 +14,10 @@ Brunch Map
 
 ## `/app`: Frontend
 
+- `$GOOGLE_MAPS_API_KEY`
+
+__Requires the above environment variables to be set.__
+
     cd app
 
     # Install dependencies

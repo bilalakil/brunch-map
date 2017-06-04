@@ -183,7 +183,7 @@ export default {
         ? db.ref('users/' + this.user.uid + '/brunchSpots/' + this.brunchSpotForm.id)
         : db.ref('users/' + this.user.uid + '/brunchSpots').push()
 
-      ref.set({
+      ref.update({
         name: this.brunchSpotForm.name,
         address: this.brunchSpotForm.address,
       })
