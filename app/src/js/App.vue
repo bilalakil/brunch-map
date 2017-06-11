@@ -87,6 +87,7 @@
             class="mdl-textfield__input"
             type="text"
             id="brunch-spot-form-name"
+            @keyup.enter="saveBrunchSpot"
           />
           <label
             class="mdl-textfield__label"
@@ -99,6 +100,7 @@
             class="mdl-textfield__input"
             type="text"
             id="brunch-spot-form-address"
+            @keyup.enter="saveBrunchSpot"
           />
           <label
             class="mdl-textfield__label"
