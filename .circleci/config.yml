@@ -21,6 +21,11 @@ jobs:
             - app/.yarn-cache
 
       - run:
+          name: Rebuild Broken NPMs
+          working_directory: app
+          command: npm rebuild node-sass
+
+      - run:
           name: Build App
           working_directory: app
           command: |
