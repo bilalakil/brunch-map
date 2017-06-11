@@ -43,7 +43,9 @@
             v-for="(spot, id) in brunchSpots"
             v-if="spot.position && !spot.position.error"
             :position="spot.position"
-            @click="infoWindow = id"
+            @mouseover="infoWindow = id"
+            @mouseout="infoWindow = infoWindow === id ? null : infoWindow"
+            @click="edit(id)"
           ></gmap-marker>
           <gmap-info-window
             v-if="_detail"
@@ -113,7 +115,12 @@
         </p>
         <input id="brunch-spot-form-logo-input" type="file" @change="logoSet"/>
 
-        <div v-mdl ref="logo-progress" class="mdl-progress mdl-js-progress"></div>
+        <div
+          ref="logo-progress"
+          v-mdl
+          class="mdl-progress mdl-js-progress"
+          :class="{ 'mdl-progress__indeterminate': this.logoUploader && this.logoProgress === 0 }"
+        ></div>
         <template v-if="brunchSpotForm.logo === ''">
           <label
             for="brunch-spot-form-logo-input"
@@ -228,6 +235,7 @@ export default {
       user: null,
       dialog: null,
       logoUploader: null,
+      logoProgress: 0,
       infoWindow: null,
     }
   },
@@ -250,12 +258,11 @@ export default {
     resetEditForm() {
       this.dialog = null
 
+      this.logoClear()
+
       this.brunchSpotForm.id = ''
       this.brunchSpotForm.name = ''
       this.brunchSpotForm.address = ''
-      this.brunchSpotForm.logo = ''
-
-      this.stopLogoUploader()
     },
 
     logoSet(event) {
@@ -272,9 +279,8 @@ export default {
       this.logoUploader.on(
         'state_changed',
         (snapshot) => {
-          progress.MaterialProgress.setProgress(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          )
+          this.logoProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          progress.MaterialProgress.setProgress(this.logoProgress)
         },
         (error) => {
           this.brunchSpotForm.logo = ''
@@ -289,20 +295,28 @@ export default {
       )
     },
     logoClear() {
-      if(!this.brunchSpotForm.id) {
+      this.stopLogoUploader()
+      
+      if(
+        typeof this.brunchSpotForm.logo === 'number' &&
+        (
+          this.brunchSpotForm.id
+            ? this.brunchSpotForm.logo !== this.brunchSpots[this.brunchSpotForm.id].logo
+            : true
+        )
+      ) {
         const sref = storage.ref('users/' + this.user.uid + '/images/' + this.brunchSpotForm.logo.toString() + '/original')
         sref.delete()
       }
 
       this.brunchSpotForm.logo = ''
-
-      this.stopLogoUploader()
     },
     stopLogoUploader() {
       if(!this.logoUploader) return
 
       this.logoUploader.cancel()
       this.logoUploader = null
+      this.logoProgress = 0
 
       const progress = this.$refs['logo-progress']
       if(progress) progress.MaterialProgress.setProgress(0)
@@ -321,14 +335,15 @@ export default {
         logo: this.brunchSpotForm.logo || null
       })
 
+      this.brunchSpotForm.logo = '' // So it won't be deleted in the reset
       this.resetEditForm()
     },
     deleteBrunchSpot(id) {
-      db.ref('users/' + this.user.uid + '/brunchSpots/' + id).remove()
-
       if(id === this.brunchSpotForm.id) {
         this.resetEditForm()
       }
+
+      db.ref('users/' + this.user.uid + '/brunchSpots/' + id).remove()
     },
 
     addBrunchSpot(snapshot) { Vue.set(this.brunchSpots, snapshot.key, snapshot.val()) },
