@@ -15,6 +15,9 @@
             "address": {
               ".validate": "newData.isString() && newData.val().length != 0 && newData.val().length < 300"
             },
+            "logo": {
+              ".validate": "newData.isNumber()"
+            },
 
             "position": {
               ".write": "auth !== null && auth.token.isAdmin === true",
@@ -36,6 +39,7 @@
             "$other": { ".validate": false }
           }
         },
+
         "$other": { ".validate": false }
       }
     }

@@ -43,7 +43,20 @@
             v-for="(spot, id) in brunchSpots"
             v-if="spot.position && !spot.position.error"
             :position="spot.position"
+            @click="infoWindow = id"
           ></gmap-marker>
+          <gmap-info-window
+            v-if="_detail"
+            :options="{ pixelOffset: { width: 0, height: -35 }, maxWidth: 200 }"
+            :opened="_detail != null"
+            :position="_detail.position"
+            @closeclick="infoWindow = null"
+          >
+            <p>{{ _detail.name }}</p>
+            <p v-if="imageIdToUrl(_detail.logo)">
+              <img :src="imageIdToUrl(_detail.logo)" alt="" class="brunch-logo"/>
+            </p>
+          </gmap-info-window>
         </template>
       </gmap-map>
       <button
@@ -90,13 +103,41 @@
             for="brunch-spot-form-address"
           >Address</label>
         </div>
+
+        <p v-if="imageIdToUrl(brunchSpotForm.logo)">
+          <img
+            class="brunch-logo"
+            :src="imageIdToUrl(brunchSpotForm.logo)"
+            alt=""
+          />
+        </p>
+        <input id="brunch-spot-form-logo-input" type="file" @change="logoSet"/>
+
+        <div v-mdl ref="logo-progress" class="mdl-progress mdl-js-progress"></div>
+        <template v-if="brunchSpotForm.logo === ''">
+          <label
+            for="brunch-spot-form-logo-input"
+            class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored block-button"
+          >
+            Set logo
+          </label>
+        </template>
+        <template v-else>
+          <span
+            class="mdl-button mdl-js-button mdl-button--raised block-button"
+            @click="logoClear"
+          >
+            Clear logo
+          </span>
+        </template>
       </div>
       <div class="mdl-dialog__actions">
         <button
           v-mdl
           type="button"
           class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect"
-          @click="dialog = null; saveBrunchSpot()"
+          :disabled="logoUploader != null"
+          @click="saveBrunchSpot"
         >
           {{ brunchSpotForm.id ? 'Save' : 'Add' }}
         </button>
@@ -104,12 +145,12 @@
           v-if="brunchSpotForm.id"
           type="button"
           class="mdl-button"
-          @click="dialog = null; deleteBrunchSpot(brunchSpotForm.id)"
+          @click="deleteBrunchSpot(brunchSpotForm.id)"
         >Delete</button>
         <button
           type="button"
           class="mdl-button"
-          @click="dialog = null; resetEditForm()"
+          @click="resetEditForm"
         >Close</button>
       </div>
     </dialog>
@@ -140,6 +181,22 @@
     bottom: $dist;
   }
 }
+
+.gm-style img {
+  max-width: 100%;
+  height: auto;
+}
+
+#brunch-spot-form-logo-input { display: none; }
+
+.brunch-logo {
+  max-width: $max-brunch-logo-width;
+  max-height: $max-brunch-logo-height;
+}
+
+.block-button {
+  display: block;
+}
 </style>
 
 <script>
@@ -148,6 +205,7 @@ import * as dialogPolyfill from 'dialog-polyfill'
 
 const auth = firebase.auth(),
       googleAuth = new firebase.auth.GoogleAuthProvider(),
+      storage = firebase.storage(),
       db = firebase.database()
 
 let spotRef = null
@@ -162,11 +220,22 @@ export default {
         id: '',
         name: '',
         address: '',
+        logo: '',
       },
+
+      imageUrls: {},
 
       user: null,
       dialog: null,
+      logoUploader: null,
+      infoWindow: null,
     }
+  },
+
+  computed: {
+    _detail() {
+      return this.infoWindow != null ? this.brunchSpots[this.infoWindow] : null
+    },
   },
 
   methods: {
@@ -174,16 +243,74 @@ export default {
       this.brunchSpotForm.id = id
       this.brunchSpotForm.name = this.brunchSpots[id].name
       this.brunchSpotForm.address = this.brunchSpots[id].address
+      this.brunchSpotForm.logo = this.brunchSpots[id].logo || ''
 
       this.dialog = 'edit'
     },
     resetEditForm() {
+      this.dialog = null
+
       this.brunchSpotForm.id = ''
       this.brunchSpotForm.name = ''
       this.brunchSpotForm.address = ''
+      this.brunchSpotForm.logo = ''
+
+      this.stopLogoUploader()
+    },
+
+    logoSet(event) {
+      const file = event.target.files[0]
+      const imageId = +Date.now()
+
+      this.brunchSpotForm.logo = file
+
+      const sref = storage.ref('users/' + this.user.uid + '/images/' + imageId.toString() + '/original')
+      this.logoUploader = sref.put(file)
+
+      const progress = this.$refs['logo-progress']
+
+      this.logoUploader.on(
+        'state_changed',
+        (snapshot) => {
+          progress.MaterialProgress.setProgress(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          )
+        },
+        (error) => {
+          this.brunchSpotForm.logo = ''
+          this.stopLogoUploader()
+        },
+        () => {
+          this.brunchSpotForm.logo = imageId
+          this.stopLogoUploader()
+
+          this.getImageUrl(imageId)
+        }
+      )
+    },
+    logoClear() {
+      if(!this.brunchSpotForm.id) {
+        const sref = storage.ref('users/' + this.user.uid + '/images/' + this.brunchSpotForm.logo.toString() + '/original')
+        sref.delete()
+      }
+
+      this.brunchSpotForm.logo = ''
+
+      this.stopLogoUploader()
+    },
+    stopLogoUploader() {
+      if(!this.logoUploader) return
+
+      this.logoUploader.cancel()
+      this.logoUploader = null
+
+      const progress = this.$refs['logo-progress']
+      if(progress) progress.MaterialProgress.setProgress(0)
     },
 
     saveBrunchSpot(e) {
+      if(this.logoUploader) return
+
       const ref = this.brunchSpotForm.id
         ? db.ref('users/' + this.user.uid + '/brunchSpots/' + this.brunchSpotForm.id)
         : db.ref('users/' + this.user.uid + '/brunchSpots').push()
@@ -191,6 +318,7 @@ export default {
       ref.update({
         name: this.brunchSpotForm.name,
         address: this.brunchSpotForm.address,
+        logo: this.brunchSpotForm.logo || null
       })
 
       this.resetEditForm()
@@ -215,6 +343,24 @@ export default {
     },
     unauth() {
       auth.signOut()
+    },
+
+    imageIdToUrl(imageId) {
+      if(typeof imageId !== 'number') return
+
+      if(typeof this.imageUrls[imageId] === 'undefined') {
+        this.getImageUrl(imageId)
+      }
+
+      return this.imageUrls[imageId]
+    },
+    getImageUrl(imageId) {
+      Vue.set(this.imageUrls, imageId, false)
+
+      const sref = storage.ref('users/' + this.user.uid + '/images/' + imageId.toString() + '/original')
+      sref.getDownloadURL().then((url) => {
+        this.imageUrls[imageId] = url
+      })
     },
   },
 
