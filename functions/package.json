@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@firebase/app-types": "^0.1.1",
     "@google-cloud/storage": "^1.5.2",
     "@google/maps": "^0.4.5",
     "firebase-admin": "^5.8.2",
