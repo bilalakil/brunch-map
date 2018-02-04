@@ -1,7 +1,7 @@
 {
   "projects": {
-    "staging": "brunch-map-staging",
+    "staging": "brunch-map-staging-194200",
     "master": "brunch-map-prod",
-    "default": "brunch-map-staging"
+    "default": "brunch-map-staging-194200"
   }
 }

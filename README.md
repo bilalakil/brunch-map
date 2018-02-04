@@ -1,6 +1,13 @@
 Brunch Map
 ==========
 
+The following Google APIs are utilised by this project and need to be enabled for it to work (not including the APIs that the Firebase CLI will handle automatically):
+
+- Maps JavaScript API
+- Maps Geocoding API
+- Manually enable Firebase Storage
+- Manually enable login services
+
 ## Root: Firebase Deployment
 
     # Install dependencies
@@ -43,6 +50,9 @@ __Requires the above environment variables to be set.__
 
 ## `/functions`: Cloud Functions
 
+- `googlemaps.key`
+
+__Requires the above config variables to be set via `functions:config:set`.__
     cd functions
 
     # Install dependencies
