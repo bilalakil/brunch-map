@@ -53,6 +53,7 @@ __Requires the above environment variables to be set.__
 - `googlemaps.key`
 
 __Requires the above config variables to be set via `functions:config:set`.__
+
     cd functions
 
     # Install dependencies

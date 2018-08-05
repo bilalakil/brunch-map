@@ -23,19 +23,28 @@
     </header>
     <div class="mdl-layout__drawer">
       <nav v-if="user" class="mdl-navigation">
-        <a
-          v-for="(spot, id) in brunchSpots"
-          class="mdl-navigation__link"
-          href="#"
-          @click="edit(id)"
-        >{{ spot.name }} ({{ spot.address }})</a>
+        <template v-for="(spot, id) in brunchSpots">
+          <div class="spot-link-wrapper">
+            <a
+              class="mdl-navigation__link"
+              href="#"
+              @click="edit(id)"
+            >{{ spot.name }} ({{ spot.address }})</a>
+            <button
+              class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab"
+              @click="infoWindow = id; persistentInfoWindow = true"
+            >
+              <i class="material-icons">place</i>
+            </button>
+          </div>
+        </template>
       </nav>
     </div>
     <main class="map-container mdl-layout__content">
       <gmap-map
         :center="{lat: 0, lng: 0}"
         :zoom="3"
-        :options="{disableDefaultUI: true}"
+        :options="{disableDefaultUI: true, clickableIcons: false}"
         style="width: 100%; height: 100%;"
       >
         <template v-if="user">
@@ -43,20 +52,26 @@
             v-for="(spot, id) in brunchSpots"
             v-if="spot.position && !spot.position.error"
             :position="spot.position"
-            @mouseover="infoWindow = id"
-            @mouseout="infoWindow = infoWindow === id ? null : infoWindow"
-            @click="edit(id)"
+            @mouseover="infoWindow = persistentInfoWindow ? infoWindow : id"
+            @mouseout="infoWindow = !persistentInfoWindow && infoWindow === id ? null : infoWindow"
+            @click="infoWindow = id; persistentInfoWindow = true"
           ></gmap-marker>
           <gmap-info-window
             v-if="_detail"
             :options="{ pixelOffset: { width: 0, height: -35 }, maxWidth: 200 }"
             :opened="_detail != null"
             :position="_detail.position"
-            @closeclick="infoWindow = null"
+            @closeclick="persistentInfoWindow = false; infoWindow = null"
           >
             <p>{{ _detail.name }}</p>
             <p v-if="imageIdToUrl(_detail.logo)">
               <img :src="imageIdToUrl(_detail.logo)" alt="" class="brunch-logo"/>
+            </p>
+            <p>{{ _detail.address }}</p>
+            <p>
+              <a href="#"
+                @click="edit(infoWindow); persistentInfoWindow = false; infoWindow = null"
+              >✍️ Edit</a>
             </p>
           </gmap-info-window>
         </template>
@@ -206,6 +221,21 @@
 .block-button {
   display: block;
 }
+
+.spot-link-wrapper {
+  position: relative;
+
+  a {
+    padding-right: 40px;
+  }
+
+  button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
 </style>
 
 <script>
@@ -239,6 +269,7 @@ export default {
       logoUploader: null,
       logoProgress: 0,
       infoWindow: null,
+      persistentInfoWindow: false,
     }
   },
 
