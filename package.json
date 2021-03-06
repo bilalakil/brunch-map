@@ -1,5 +1,10 @@
 {
+  "name": "brunch-map",
   "dependencies": {
-    "firebase-tools": "^6.9.2"
+    "brunch-map-app": "file:app",
+    "brunch-map-functions": "file:functions"
+  },
+  "devDependencies": {
+    "firebase-tools": "^9.5.0"
   }
 }

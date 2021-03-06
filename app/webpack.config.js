@@ -1,40 +1,40 @@
-const webpack                    = require('webpack'),
-      HtmlWebpackPlugin          = require('html-webpack-plugin'),
-      ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
+const webpack            = require('webpack'),
+      HtmlWebpackPlugin  = require('html-webpack-plugin'),
+      VueLoaderPlugin    = require('vue-loader/lib/plugin')
 
 module.exports = env => {
-  const isProd = !env || !env.branch || env.branch === 'master',
+  const isMain = !env || !env.branch || env.branch === 'main',
         vars = {}
   
   vars.GOOGLE_MAPS_API_KEY = '"' + process.env.GOOGLE_MAPS_API_KEY + '"'
-  if(isProd) {
+  if(isMain) {
     vars.NODE_ENV = '"production"'
   }
 
   return {
+    mode: isMain ? 'production' : 'development',
     entry: './src/js/app',
     output: {
       path: __dirname + '/dist',
-      filename: 'js/[name].[chunkhash].js'
+      filename: 'js/[name].[chunkhash].js',
+    },
+    optimization: {
+      minimize: isMain
     },
     plugins: [
       new HtmlWebpackPlugin({
         template: './src/index.html',
         minify: {
-          removeComments: isProd,
-          collapseWhitespace: isProd,
+          removeComments: isMain,
+          collapseWhitespace: isMain,
         },
         inject: 'head',
-      }),
-      new ScriptExtHtmlWebpackPlugin({
-        defaultAttribute: 'defer'
+        scriptLoading: 'defer',
       }),
       new webpack.DefinePlugin({
         'process.env': vars
       }),
-      isProd
-        ? new webpack.optimize.UglifyJsPlugin()
-        : null,
+      new VueLoaderPlugin()
     ].filter(Boolean),
     module: {
       rules: [
@@ -44,23 +44,36 @@ module.exports = env => {
           options: {
             scss: 'vue-style-loader!css-loader!sass-loader',
             sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax',
-            cssSourceMap: !isProd,
+            cssSourceMap: !isMain,
           }
         },
         {
-          test: /\.js$/,
+          test: /\.m?js$/,
           loader: 'babel-loader',
-          exclude: /node_modules/,
+          exclude: /node_modules/
         },
         {
-          test: /\.scss$/,
+          test: /\.css$/,
           use: [
+            { loader: 'vue-style-loader' },
             { loader: 'style-loader' },
             {
               loader: 'css-loader',
               options: {
-                minimize: isProd,
-                sourceMaps: !isProd,
+                sourceMap: !isMain
+              },
+            },
+          ]
+        },
+        {
+          test: /\.scss$/,
+          use: [
+            { loader: 'vue-style-loader' },
+            { loader: 'style-loader' },
+            {
+              loader: 'css-loader',
+              options: {
+                sourceMap: !isMain
               },
             },
             { loader: 'sass-loader' },

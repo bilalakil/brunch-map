@@ -11,13 +11,13 @@ The following Google APIs are utilised by this project and need to be enabled fo
 ## Root: Firebase Deployment
 
     # Install dependencies
-    yarn
+    npm i
 
     # Select project
-    ./node_modules/.bin/firebase use staging
+    npx firebase use staging
 
-    # Deploy everything
-    ./node_modules/.bin/firebase deploy
+    # Deploy everything (Frontend would need to be built first)
+    npx firebase deploy
 
 ## `/app`: Frontend
 
@@ -28,46 +28,58 @@ __Requires the above environment variables to be set.__
     cd app
 
     # Install dependencies
-    yarn
+    npm i
 
     # Build app
-    ./node_modules/.bin/webpack --env.branch staging
+    npx webpack --env branch=staging
 
     # Watch for changes
-    ./node_modules/.bin/webpack --watch --env.branch staging
+    npx webpack --watch --env branch=staging
 
     # Firebase actions back in root..
+    cd ..
+
     # Run local server
-    ./node_modules/.bin/firebase serve
+    npx firebase serve
 
     # Deploy
-    ./node_modules/.bin/firebase deploy --only hosting
+    npx firebase deploy --only hosting
 
 ## `/database.rules.json`: Database Rules
 
     # Deploy
-    ./node_modules/.bin/firebase deploy --only database
+    npx firebase deploy --only database
+
+## `/storage.rules`: Storage Rules
+
+    # Deploy
+    npx firebase deploy --only storage
 
 ## `/functions`: Cloud Functions
 
 - `googlemaps.key`
 
-__Requires the above config variables to be set via `functions:config:set`.__
+__Requires the above config variables to be set, i.e. via
+`npx firebase functions:config:set googlemaps.key=...`.__
 
     cd functions
 
     # Install dependencies
-    yarn
+    npm i
 
     # Firebase actions back in root..
-    # Deploy
-    ./node_modules/.bin/firebase deploy --only functions
+    cd ..
 
-## Continuous Integration via CircleCI
+    # Running functions locally has not been successfully tested yet ;(
+
+    # Deploy
+    npx firebase deploy --only functions
+
+## Continuous Integration via GitHub Actions
 
     # View config
-    less .circleci/config.yml
+    less .github/workflows/{main,staging}-build-deploy.yml
 
     # Code, commit, push, debug, repeat
-    # master and staging branches supported
+    # main and staging branches supported
 

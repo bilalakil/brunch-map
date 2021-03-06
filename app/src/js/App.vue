@@ -50,6 +50,7 @@
         <template v-if="user">
           <gmap-marker
             v-for="(spot, id) in brunchSpots"
+            v-bind:key="id"
             v-if="spot.position && !spot.position.error"
             :position="spot.position"
             @mouseover="infoWindow = persistentInfoWindow ? infoWindow : id"
@@ -182,7 +183,12 @@
 </template>
 
 <style lang="scss" scoped>
-@import '../scss/variables';
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import '../../node_modules/material-design-lite/material.min.css';
+@import '../../node_modules/material-design-lite/src/variables';
+
+$max-brunch-logo-width: 100%;
+$max-brunch-logo-height: 10em;
 
 .map-container {
   width: 100%;
@@ -237,11 +243,15 @@
   }
 }
 
+// https://github.com/GoogleChrome/dialog-polyfill
 dialog {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+
+  // Also need this for some reason...
+  z-index: 100;
 
   &> div {
     background: white;
@@ -251,7 +261,7 @@ dialog {
 
 <script>
 import Vue from 'vue'
-import * as dialogPolyfill from 'dialog-polyfill'
+import dialogPolyfill from 'dialog-polyfill'
 
 const auth = firebase.auth(),
       googleAuth = new firebase.auth.GoogleAuthProvider(),
