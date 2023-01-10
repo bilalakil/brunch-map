@@ -4,7 +4,7 @@
     "@firebase/app-types": "^0.6.1",
     "@google-cloud/storage": "^5.8.1",
     "@googlemaps/google-maps-services-js": "^3.1.16",
-    "firebase-admin": "^9.5.0",
+    "firebase-admin": "^11.4.1",
     "firebase-functions": "^3.13.2",
     "q": "^1.5.1"
   }
